@@ -7,7 +7,14 @@ const app = express();
 app.use(express.json());
 app.use(express.static(path.join(__dirname)));
 
+const fs = require('fs');
 const client = new Anthropic();
+
+// Read system prompt from secret file (Render) or env var (local)
+let systemPrompt = process.env.SYSTEM_PROMPT || '';
+try {
+  systemPrompt = fs.readFileSync('/etc/secrets/system-prompt', 'utf8');
+} catch {}
 
 app.post('/api/chat', async (req, res) => {
   try {
@@ -16,7 +23,7 @@ app.post('/api/chat', async (req, res) => {
     const response = await client.messages.create({
       model: 'claude-sonnet-4-20250514',
       max_tokens: 4096,
-      system: process.env.SYSTEM_PROMPT,
+      system: systemPrompt,
       messages,
     });
 
